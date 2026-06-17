@@ -18,14 +18,28 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
+      - name: Verify AWS Authentication
+        run: |
+          aws sts get-caller-identity
+
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
+
+      - name: Verify EKS Cluster Exists
+        run: |
+          aws eks describe-cluster \
+            --name scaling-down \
+            --region ap-south-1
 
       - name: Configure kubeconfig
         run: |
           aws eks update-kubeconfig \
             --region ap-south-1 \
             --name scaling-down
+
+      - name: Verify kubectl Context
+        run: |
+          kubectl config current-context
 
       - name: Verify Cluster Access
         run: |
@@ -38,4 +52,4 @@ jobs:
       - name: Verify Deployment
         run: |
           kubectl get deployment nginx-demo
-          kubectl get pods
+          kubectl get pods -o wide
