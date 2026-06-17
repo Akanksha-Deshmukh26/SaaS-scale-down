@@ -1,0 +1,41 @@
+name: Deploy to EKS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ap-south-1 \
+            --name scaling-down
+
+      - name: Verify Cluster Access
+        run: |
+          kubectl get nodes
+
+      - name: Deploy Application
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+
+      - name: Verify Deployment
+        run: |
+          kubectl get deployment nginx-demo
+          kubectl get pods
